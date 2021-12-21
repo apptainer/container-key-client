@@ -106,7 +106,7 @@ func OptHTTPClient(c *http.Client) Option {
 	}
 }
 
-const defaultBaseURL = "https://keys.sylabs.io/"
+const defaultBaseURL = "https://keys.openpgp.org/"
 
 // Client describes the client details.
 type Client struct {
