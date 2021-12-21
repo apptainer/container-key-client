@@ -1,4 +1,4 @@
-module github.com/sylabs/scs-key-client
+module github.com/apptainer/container-key-client
 
 go 1.17
 

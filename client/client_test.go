@@ -179,10 +179,10 @@ func TestNewRequest(t *testing.T) {
 		wantUserAgent  string
 	}{
 		{"BadMethod", nil, "b@d	", "", "", "", true, "", "", ""},
-		{"Get", nil, http.MethodGet, "/path", "", "", false, "https://keys.sylabs.io/path", "", ""},
-		{"Post", nil, http.MethodPost, "/path", "", "", false, "https://keys.sylabs.io/path", "", ""},
-		{"PostRawQuery", nil, http.MethodPost, "/path", "a=b", "", false, "https://keys.sylabs.io/path?a=b", "", ""},
-		{"PostBody", nil, http.MethodPost, "/path", "", "body", false, "https://keys.sylabs.io/path", "", ""},
+		{"Get", nil, http.MethodGet, "/path", "", "", false, "https://keys.openpgp.org/path", "", ""},
+		{"Post", nil, http.MethodPost, "/path", "", "", false, "https://keys.openpgp.org/path", "", ""},
+		{"PostRawQuery", nil, http.MethodPost, "/path", "a=b", "", false, "https://keys.openpgp.org/path?a=b", "", ""},
+		{"PostBody", nil, http.MethodPost, "/path", "", "body", false, "https://keys.openpgp.org/path", "", ""},
 		{"BaseURLAbsolute", []Option{
 			OptBaseURL("hkps://hkps.pool.sks-keyservers.net"),
 		}, http.MethodGet, "/path", "", "", false, "https://hkps.pool.sks-keyservers.net/path", "", ""},
@@ -197,10 +197,10 @@ func TestNewRequest(t *testing.T) {
 		}, http.MethodGet, "path", "", "", false, "https://hkps.pool.sks-keyservers.net/a/b/path", "", ""},
 		{"BearerToken", []Option{
 			OptBearerToken("blah"),
-		}, http.MethodGet, "/path", "", "", false, "https://keys.sylabs.io/path", "BEARER blah", ""},
+		}, http.MethodGet, "/path", "", "", false, "https://keys.openpgp.org/path", "BEARER blah", ""},
 		{"UserAgent", []Option{
 			OptUserAgent("Secret Agent Man"),
-		}, http.MethodGet, "/path", "", "", false, "https://keys.sylabs.io/path", "", "Secret Agent Man"},
+		}, http.MethodGet, "/path", "", "", false, "https://keys.openpgp.org/path", "", "Secret Agent Man"},
 	}
 
 	for _, tt := range tests {
