@@ -20,10 +20,11 @@ import (
 )
 
 type MockPKSAdd struct {
-	t       *testing.T
-	code    int
-	message string
-	keyText string
+	t        *testing.T
+	code     int
+	message  string
+	keyText  string
+	response string
 }
 
 func (m *MockPKSAdd) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -51,6 +52,9 @@ func (m *MockPKSAdd) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if got, want := r.Form.Get("keytext"), m.keyText; got != want {
 		m.t.Errorf("got key text %v, want %v", got, want)
+	}
+	if _, err := io.Copy(w, strings.NewReader(m.response)); err != nil {
+		m.t.Fatalf("failed to copy: %v", err)
 	}
 }
 
@@ -130,6 +134,122 @@ func TestPKSAdd(t *testing.T) {
 
 			if got, want := err, tt.wantErr; !errors.Is(got, want) {
 				t.Fatalf("got error %v, want %v", got, want)
+			}
+		})
+	}
+}
+
+func TestPKSAdd2(t *testing.T) {
+	cancelled, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	tests := []struct {
+		name     string
+		ctx      context.Context //nolint:containedctx
+		keyText  string
+		code     int
+		message  string
+		response string
+		wantErr  error
+	}{
+		{
+			name:    "OK",
+			ctx:     context.Background(),
+			keyText: "key",
+			code:    http.StatusOK,
+		},
+		{
+			name:     "Accepted",
+			ctx:      context.Background(),
+			keyText:  "key",
+			response: "some verification instructions",
+			code:     http.StatusAccepted,
+		},
+		{
+			name:    "HTTPError",
+			ctx:     context.Background(),
+			keyText: "key",
+			code:    http.StatusBadRequest,
+			wantErr: &HTTPError{code: http.StatusBadRequest},
+		},
+		{
+			name:    "HTTPErrorMessage",
+			ctx:     context.Background(),
+			keyText: "key",
+			code:    http.StatusBadRequest,
+			message: "blah",
+			wantErr: &HTTPError{code: http.StatusBadRequest},
+		},
+		{
+			name:    "ContextCanceled",
+			ctx:     cancelled,
+			keyText: "key",
+			code:    http.StatusOK,
+			wantErr: context.Canceled,
+		},
+		{
+			name:    "InvalidKeyText",
+			ctx:     context.Background(),
+			keyText: "",
+			wantErr: ErrInvalidKeyText,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			s := httptest.NewServer(&MockPKSAdd{
+				t:       t,
+				code:    tt.code,
+				message: tt.message,
+				keyText: tt.keyText,
+			})
+			defer s.Close()
+
+			c, err := NewClient(OptBaseURL(s.URL))
+			if err != nil {
+				t.Fatalf("failed to create client: %v", err)
+			}
+
+			err = c.PKSAdd(tt.ctx, tt.keyText)
+
+			if got, want := err, tt.wantErr; !errors.Is(got, want) {
+				t.Fatalf("got error %v, want %v", got, want)
+			}
+		})
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			s := httptest.NewServer(&MockPKSAdd{
+				t:        t,
+				code:     tt.code,
+				message:  tt.message,
+				keyText:  tt.keyText,
+				response: tt.response,
+			})
+			defer s.Close()
+
+			c, err := NewClient(OptBaseURL(s.URL))
+			if err != nil {
+				t.Fatalf("failed to create client: %v", err)
+			}
+
+			r, err := c.PKSAddWithResponse(tt.ctx, tt.keyText)
+
+			if got, want := err, tt.wantErr; !errors.Is(got, want) {
+				t.Fatalf("got error %v, want %v", got, want)
+			}
+
+			if err == nil {
+				if got, want := r, tt.response; got != want {
+					t.Errorf("got response %q, want %q", got, want)
+				}
 			}
 		})
 	}
