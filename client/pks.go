@@ -36,8 +36,18 @@ var ErrInvalidOperation = errors.New("invalid operation")
 //
 // If an non-200 HTTP status code is received, an error wrapping an HTTPError is returned.
 func (c *Client) PKSAdd(ctx context.Context, keyText string) error {
+	_, err := c.PKSAddWithResponse(ctx, keyText)
+	return err
+}
+
+// PKSAdd submits an ASCII armored keyring to the Key Service, as specified in section 4 of the
+// OpenPGP HTTP Keyserver Protocol (HKP) specification and returns the server response upon
+// successful submission. The context controls the lifetime of the request.
+//
+// If an non-200 HTTP status code is received, an error wrapping an HTTPError is returned.
+func (c *Client) PKSAddWithResponse(ctx context.Context, keyText string) (string, error) {
 	if keyText == "" {
-		return fmt.Errorf("%w", ErrInvalidKeyText)
+		return "", fmt.Errorf("%w", ErrInvalidKeyText)
 	}
 
 	ref := &url.URL{Path: pathPKSAdd}
@@ -47,20 +57,26 @@ func (c *Client) PKSAdd(ctx context.Context, keyText string) error {
 
 	req, err := c.NewRequest(ctx, http.MethodPost, ref, strings.NewReader(v.Encode()))
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return "", fmt.Errorf("%w", err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := c.Do(req)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return "", fmt.Errorf("%w", err)
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode/100 != 2 { // non-2xx status code
-		return fmt.Errorf("%w", errorFromResponse(res))
+		return "", fmt.Errorf("%w", errorFromResponse(res))
 	}
-	return nil
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", fmt.Errorf("%w", err)
+	}
+
+	return string(body), nil
 }
 
 // PageDetails includes pagination details.
