@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"net/url"
 
-	jsonresp "github.com/sylabs/json-resp"
+	jsonresp "github.com/apptainer/json-resp"
 )
 
 const pathVersion = "version"
