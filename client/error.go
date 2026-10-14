@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"net/http"
 
-	jsonresp "github.com/sylabs/json-resp"
+	jsonresp "github.com/apptainer/json-resp"
 )
 
 // HTTPError represents an error returned from an HTTP server.

@@ -1,5 +1,5 @@
 module github.com/apptainer/container-key-client
 
-go 1.17
+go 1.26
 
-require github.com/sylabs/json-resp v0.9.5
+require github.com/apptainer/json-resp v0.10.0

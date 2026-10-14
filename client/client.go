@@ -182,5 +182,5 @@ func (c *Client) NewRequest(ctx context.Context, method string, ref *url.URL, bo
 
 // Do sends an HTTP request and returns an HTTP response.
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	return c.httpClient.Do(req)
+	return c.httpClient.Do(req) // #nosec G704 -- no risk of SSRF
 }
